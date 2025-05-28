@@ -1,0 +1,13 @@
+[core]
+	repositoryformatversion = 0
+	filemode = false
+	bare = false
+	logallrefupdates = true
+	symlinks = false
+	ignorecase = true
+[submodule "theme/binario"]
+	url = https://github.com/Vimux/Binario
+	active = true
+[submodule "themes/binario"]
+	url = https://github.com/Vimux/Binario
+	active = true
