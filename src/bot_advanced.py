@@ -1,25 +1,24 @@
-# bot_qwen_together.py  (✓ c кнопками и индикатором ожидания)
 import os, logging, tempfile, subprocess
 from dotenv import load_dotenv
 import telebot, whisper
 from telebot import types
 from together import Together
 
-# ── 1. env ────────────────────────────────────────────────────────────
+# env
 load_dotenv()
 TG_TOKEN         = os.getenv("TG_TOKEN", "").strip()
 TOGETHER_API_KEY = os.getenv("TOGETHER_API_KEY", "").strip()
 if not TG_TOKEN or not TOGETHER_API_KEY:
     raise RuntimeError(".env должен содержать TG_TOKEN и TOGETHER_API_KEY")
 
-# ── 2. init ───────────────────────────────────────────────────────────
+# init
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(message)s")
 bot           = telebot.TeleBot(TG_TOKEN)
 whisper_model = whisper.load_model("small")
 client        = Together(api_key=TOGETHER_API_KEY)
 MODEL_NAME    = "Qwen/Qwen2.5-72B-Instruct-Turbo"
 
-# ── 3. constant ───────────────────────────────────────────────────────
+# constant
 FULL_TEXT_SEC = 5
 MAX_DUR_SEC   = 20*60
 MAX_CHARS     = 4000
@@ -32,7 +31,7 @@ SETTINGS = {
 # транзитное хранилище {chat_id: текст транскрипта}
 pending_text: dict[int, str] = {}
 
-# ── 4. helpers ────────────────────────────────────────────────────────
+# helpers
 def to_wav(src: str) -> str:
     dst = src.rsplit(".",1)[0] + ".wav"
     subprocess.run(["ffmpeg","-y","-i",src,"-ar","16000",dst],
@@ -67,14 +66,14 @@ def keyboard():
     )
     return kb
 
-# ── 5. /start /help ───────────────────────────────────────────────────
+# /start /help 
 HELP = (
     "Пришли голосовое / MP3 до 20 мин, чтобы получить краткое содержание\n"
 )
 @bot.message_handler(commands=["start","help"])
 def cmd_help(m): bot.send_message(m.chat.id, HELP)
 
-# ── 6. voice / audio ──────────────────────────────────────────────────
+# voice / audio 
 @bot.message_handler(content_types=["voice","audio"])
 def handle_audio(m):
     fid, dur = (m.voice.file_id, m.voice.duration) if m.content_type=="voice" \
@@ -94,7 +93,7 @@ def handle_audio(m):
             for chunk in split_long(text):
                 bot.send_message(m.chat.id, f"*Transcript:*\n{chunk}", parse_mode="Markdown")
         else:
-            pending_text[m.chat.id] = text    # запоминаем
+            pending_text[m.chat.id] = text    
             bot.send_message(
                 m.chat.id,
                 "Выберите длину конспекта:",
@@ -107,7 +106,7 @@ def handle_audio(m):
         for fn in (src, locals().get("wav")):
             if fn and os.path.exists(fn): os.remove(fn)
 
-# ── 7. callback: выбор длины ───────────────────────────────────────────
+# callback: выбор длины
 @bot.callback_query_handler(func=lambda c: c.data in SETTINGS)
 def process_choice(call: types.CallbackQuery):
     mode = call.data
