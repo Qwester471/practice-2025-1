@@ -1,6 +1,0 @@
-[submodule "theme/binario"]
-	path = theme/binario
-	url = https://github.com/Vimux/Binario
-[submodule "themes/binario"]
-	path = themes/binario
-	url = https://github.com/Vimux/Binario
